@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\bugtracker-backend-net.props" />
+</Project>
