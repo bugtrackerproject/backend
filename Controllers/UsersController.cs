@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using bugtracker_backend_net.Data;
 using bugtracker_backend_net.Data.Models;
+using bugtracker_backend_net.Data.DataTransferObjects;
+using Microsoft.AspNetCore.Identity;
+using System.Data;
 
 namespace bugtracker_backend_net.Controllers
 {
@@ -15,10 +18,12 @@ namespace bugtracker_backend_net.Controllers
     public class UsersController : ControllerBase
     {
         private readonly BugtrackerDbContext _context;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public UsersController(BugtrackerDbContext context)
+        public UsersController(BugtrackerDbContext context, IPasswordHasher<User> passwordHasher)
         {
             _context = context;
+            _passwordHasher = passwordHasher;
         }
 
         // GET: api/Users
@@ -32,14 +37,22 @@ namespace bugtracker_backend_net.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == id);
+
 
             if (user == null)
             {
                 return NotFound();
             }
 
-            return user;
+
+            return Ok(new
+            {
+                email = user.Email,
+                name = user.Name,
+                role = user.Role
+            });
         }
 
         // PUT: api/Users/5
@@ -76,12 +89,50 @@ namespace bugtracker_backend_net.Controllers
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<ActionResult<User>> PostUser([FromBody] UserDto userDto)
         {
+            if (userDto == null || string.IsNullOrEmpty(userDto.Email) || string.IsNullOrEmpty(userDto.Password))
+            {
+                return BadRequest("Email and Password are required.");
+            }
+
+            if (userDto.Password.Length < 3)
+            {
+                return BadRequest("Password must be at least 3 characters");
+            }
+
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == userDto.Email);
+
+            if (existingUser != null)
+            {
+                return BadRequest("User with this email already exists.");
+            }
+
+            var passwordHash = _passwordHasher.HashPassword(null, userDto.Password);
+
+
+            var user = new User
+            {
+                Email = userDto.Email,
+                Name = userDto.Name,
+                PasswordHash = passwordHash,
+                Role = UserRole.User.ToString()
+            };
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
+            return CreatedAtAction(
+                nameof(GetUser),
+                new { id = user.Id },
+                new
+                {
+                    email = user.Email,
+                    name = user.Name,
+                    role = user.Role
+                }
+            );
         }
 
         // DELETE: api/Users/5

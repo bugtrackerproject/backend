@@ -6,7 +6,7 @@
         public string Email { get; set; }
         public string Name { get; set; }
         public string PasswordHash { get; set; } = string.Empty;
-        public UserRole Role { get; set; }
+        public string Role { get; set; }
 
         // Navigation Properties
         public List<Project> Projects { get; set; } = new(); // Many-to-many relationship
@@ -16,8 +16,9 @@
 
     public enum UserRole
     {
-        Admin = 1,
-        Developer = 2,
-        Submitter = 3,
+        Admin,
+        User,
+        Developer,
+        Submitter
     }
 }

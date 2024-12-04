@@ -34,9 +34,9 @@ namespace bugtracker_backend_net.Data
 
             // Configure Ticket-User (Submitter)
             modelBuilder.Entity<Ticket>()
-            .HasOne(t => t.Submitter)
-            .WithMany(u => u.TicketsSubmitted)
-            .HasForeignKey(t => t.SubmitterId);
+                .HasOne(t => t.Submitter)
+                .WithMany(u => u.TicketsSubmitted)
+                .HasForeignKey(t => t.SubmitterId);
 
             base.OnModelCreating(modelBuilder);
         }
