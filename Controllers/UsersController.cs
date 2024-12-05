@@ -80,7 +80,7 @@ namespace bugtracker_backend_net.Controllers
 
             user.Email = userDto.Email;
             user.Name = userDto.Name;
-            user.Role = userDto.Role;
+            //user.Role = userDto.Role.ToString();
 
             if (!string.IsNullOrEmpty(userDto.Password))
             {

@@ -64,7 +64,7 @@ namespace bugtracker_backend_net.Controllers
                 issuer: jwtSettings.Issuer,
                 audience: jwtSettings.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
+                expires: DateTime.UtcNow.AddHours(12),
                 signingCredentials: creds
             );
 

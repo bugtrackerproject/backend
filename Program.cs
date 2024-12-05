@@ -21,6 +21,9 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new EnumWithSpacesConverter<TicketType>());
+        options.JsonSerializerOptions.Converters.Add(new EnumWithSpacesConverter<TicketPriority>());
+        options.JsonSerializerOptions.Converters.Add(new EnumWithSpacesConverter<TicketStatus>());
+        options.JsonSerializerOptions.Converters.Add(new EnumWithSpacesConverter<UserRole>());
     });
 
 
