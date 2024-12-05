@@ -8,7 +8,8 @@ namespace bugtracker_backend_net.Data.Models
         public string Email { get; set; }
         public string Name { get; set; }
         public string PasswordHash { get; set; } = string.Empty;
-        public string Role { get; set; }
+
+        public UserRole Role { get; set; }
 
         // Navigation Properties
         [JsonIgnore]
@@ -21,9 +22,9 @@ namespace bugtracker_backend_net.Data.Models
 
     public enum UserRole
     {
-        Admin,
-        User,
-        Developer,
-        Submitter
+        Admin = 1,
+        User = 2,
+        Developer = 3,
+        Submitter = 4
     }
 }

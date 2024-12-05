@@ -117,7 +117,7 @@ namespace bugtracker_backend_net.Controllers
                 Email = userDto.Email,
                 Name = userDto.Name,
                 PasswordHash = passwordHash,
-                Role = UserRole.User.ToString()
+                Role = UserRole.User
             };
 
             _context.Users.Add(user);

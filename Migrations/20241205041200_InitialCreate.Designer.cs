@@ -12,8 +12,8 @@ using bugtracker_backend_net.Data;
 namespace bugtracker_backend_net.Migrations
 {
     [DbContext(typeof(BugtrackerDbContext))]
-    [Migration("20241204125408_removedRoleModel")]
-    partial class removedRoleModel
+    [Migration("20241205041200_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -132,9 +132,8 @@ namespace bugtracker_backend_net.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

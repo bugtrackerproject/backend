@@ -24,7 +24,7 @@ namespace bugtracker_backend_net.Controllers
 
         // GET: api/Projects
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Project>>> GetProjects()
+        public async Task<ActionResult<IEnumerable<ProjectResponseDto>>> GetProjects()
         {
             var projects = await _context.Projects
                 .Include(p => p.Users)
@@ -46,7 +46,7 @@ namespace bugtracker_backend_net.Controllers
 
         // GET: api/Projects/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Project>> GetProject(Guid id)
+        public async Task<ActionResult<ProjectResponseDto>> GetProject(Guid id)
         {
             var project = await _context.Projects
                 .Include(p => p.Users) 
@@ -104,7 +104,7 @@ namespace bugtracker_backend_net.Controllers
         // POST: api/Projects
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Project>> PostProject([FromBody] ProjectDto projectDto)
+        public async Task<ActionResult<ProjectResponseDto>> PostProject([FromBody] ProjectDto projectDto)
         {
             var existingProject = await _context.Projects
               .FirstOrDefaultAsync(p => p.Name == projectDto.Name);

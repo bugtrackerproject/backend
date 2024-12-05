@@ -1,4 +1,5 @@
 ﻿using System.Net.Sockets;
+using System.Text.Json.Serialization;
 
 namespace bugtracker_backend_net.Data.Models
 {
@@ -19,12 +20,18 @@ namespace bugtracker_backend_net.Data.Models
 
         // Foreign Keys
         public Guid ProjectId { get; set; }
+
+        [JsonIgnore]
         public Project Project { get; set; } = null!;
 
         public Guid? AssigneeId { get; set; } // nullable - ticket not assigned to a user yet
+
+        [JsonIgnore]
         public User? Assignee { get; set; }
         
         public Guid SubmitterId { get; set; }
+
+        [JsonIgnore]
         public User Submitter { get; set; } = null!;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
