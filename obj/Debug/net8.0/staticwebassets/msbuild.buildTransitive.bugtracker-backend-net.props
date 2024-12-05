@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\bugtracker-backend-net.props" />
-</Project>

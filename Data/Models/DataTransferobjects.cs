@@ -35,7 +35,7 @@ namespace bugtracker_backend_net.Data.DataTransferObjects
         public string Description { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public List<Guid> Users { get; set; } = new(); // Only user IDs
+        public List<Guid> Users { get; set; } = new();
     }
 
 }

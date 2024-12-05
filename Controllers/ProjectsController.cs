@@ -104,7 +104,7 @@ namespace bugtracker_backend_net.Controllers
         // POST: api/Projects
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<User>> PostProject([FromBody] ProjectDto projectDto)
+        public async Task<ActionResult<Project>> PostProject([FromBody] ProjectDto projectDto)
         {
             var existingProject = await _context.Projects
               .FirstOrDefaultAsync(p => p.Name == projectDto.Name);
