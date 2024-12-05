@@ -56,34 +56,45 @@ namespace bugtracker_backend_net.Controllers
         }
 
         // PUT: api/Users/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(Guid id, User user)
+        public async Task<IActionResult> PutUser(Guid id, [FromBody] UserDto userDto)
         {
-            if (id != user.Id)
+            var user = await _context.Users
+                .FindAsync(id);
+
+            if (user == null)
             {
-                return BadRequest();
+                return NotFound($"User with ID {id} not found.");
             }
 
-            _context.Entry(user).State = EntityState.Modified;
+            if (user.Email != userDto.Email)
+            {
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == userDto.Email);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
+                if (existingUser != null)
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
+                    return Conflict("User with this email already exists.");
                 }
             }
 
-            return NoContent();
+            user.Email = userDto.Email;
+            user.Name = userDto.Name;
+            user.Role = userDto.Role;
+
+            if (!string.IsNullOrEmpty(userDto.Password))
+            {
+                user.PasswordHash = _passwordHasher.HashPassword(null, userDto.Password);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                email = user.Email,
+                name = user.Name,
+                role = user.Role
+            });
         }
 
         // POST: api/Users

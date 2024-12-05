@@ -20,7 +20,7 @@ Env.Load();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(new EnumNamingPolicy()));  // Serialise Enums by D
+        options.JsonSerializerOptions.Converters.Add(new EnumWithSpacesConverter<TicketType>());
     });
 
 
