@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("bugtracker-backend-net")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cba49f3dd4f9687092a6df0086afd5918cffe417")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f558c70b3a3423f3837a67a7858ad873180254de")]
 [assembly: System.Reflection.AssemblyProductAttribute("bugtracker-backend-net")]
 [assembly: System.Reflection.AssemblyTitleAttribute("bugtracker-backend-net")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

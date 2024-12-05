@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using bugtracker_backend_net.Data;
 using bugtracker_backend_net.Data.Models;
+using bugtracker_backend_net.Data.DataTransferObjects;
 
 namespace bugtracker_backend_net.Controllers
 {
@@ -25,21 +26,48 @@ namespace bugtracker_backend_net.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Project>>> GetProjects()
         {
-            return await _context.Projects.ToListAsync();
+            var projects = await _context.Projects
+                .Include(p => p.Users)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var projectResponses = projects.Select(project => new ProjectResponseDto
+            {
+                Id = project.Id,
+                Name = project.Name,
+                Description = project.Description,
+                Users = project.Users.Select(u => u.Id).ToList(),
+                CreatedAt = project.CreatedAt,
+                UpdatedAt = project.UpdatedAt
+            }).ToList();
+
+            return Ok(projectResponses);
         }
 
         // GET: api/Projects/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Project>> GetProject(Guid id)
         {
-            var project = await _context.Projects.FindAsync(id);
+            var project = await _context.Projects
+                .Include(p => p.Users) 
+                .AsNoTracking()     
+                .FirstOrDefaultAsync(p => p.Id == id);
 
             if (project == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Project not found." });
             }
 
-            return project;
+            var projectResponse = new ProjectResponseDto
+            {
+                Id = project.Id,
+                Name = project.Name,
+                Description = project.Description,
+                Users = project.Users.Select(u => u.Id).ToList()
+            };
+
+
+            return Ok(projectResponse);
         }
 
         // PUT: api/Projects/5
@@ -76,12 +104,49 @@ namespace bugtracker_backend_net.Controllers
         // POST: api/Projects
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Project>> PostProject(Project project)
+        public async Task<ActionResult<User>> PostProject([FromBody] ProjectDto projectDto)
         {
+            var existingProject = await _context.Projects
+              .FirstOrDefaultAsync(p => p.Name == projectDto.Name);
+
+            if (existingProject != null)
+            {
+                return Conflict(new { message = "A project with the same name already exists." });
+            }
+
+
+            var users = await _context.Users
+                .Where(u => projectDto.Users.Contains(u.Id))
+                .ToListAsync();
+
+            if (users.Count != projectDto.Users.Length)
+            {
+                return BadRequest("Some users were not found.");
+            }
+
+            var project = new Project
+            {
+                Name = projectDto.Name,
+                Description = projectDto.Description,
+                Users = users
+            };
+
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetProject", new { id = project.Id }, project);
+            var projectResponse = new ProjectResponseDto
+            {
+                Id = project.Id,
+                Name = project.Name,
+                Description = project.Description,
+                Users = project.Users.Select(u => u.Id).ToList(),
+                CreatedAt = project.CreatedAt,
+                UpdatedAt = project.UpdatedAt
+            };
+
+
+
+            return CreatedAtAction("GetProject", new { id = project.Id }, projectResponse);
         }
 
         // DELETE: api/Projects/5

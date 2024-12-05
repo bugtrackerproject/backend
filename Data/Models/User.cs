@@ -1,4 +1,6 @@
-﻿namespace bugtracker_backend_net.Data.Models
+﻿using System.Text.Json.Serialization;
+
+namespace bugtracker_backend_net.Data.Models
 {
     public class User
     {
@@ -9,8 +11,11 @@
         public string Role { get; set; }
 
         // Navigation Properties
+        [JsonIgnore]
         public List<Project> Projects { get; set; } = new(); // Many-to-many relationship
+        [JsonIgnore]
         public List<Ticket> TicketsSubmitted { get; set; } = new(); // Tickets submitted by the user
+        [JsonIgnore]
         public List<Ticket> TicketsAssigned { get; set; } = new(); // Tickets assigned to the user
     }
 

@@ -106,7 +106,7 @@ namespace bugtracker_backend_net.Controllers
 
             if (existingUser != null)
             {
-                return BadRequest("User with this email already exists.");
+                return Conflict("User with this email already exists.");
             }
 
             var passwordHash = _passwordHasher.HashPassword(null, userDto.Password);
