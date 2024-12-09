@@ -8,7 +8,6 @@ namespace bugtracker_backend_net.Data.Models
         public string Email { get; set; }
         public string Name { get; set; }
         public string PasswordHash { get; set; } = string.Empty;
-
         public UserRole Role { get; set; }
 
         // Navigation Properties

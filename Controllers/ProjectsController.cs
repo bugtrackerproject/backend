@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using bugtracker_backend_net.Data;
 using bugtracker_backend_net.Data.Models;
 using bugtracker_backend_net.Data.DataTransferObjects;
+using System.Security.Claims;
+using Microsoft.CodeAnalysis;
+using System.Net.Sockets;
 
 namespace bugtracker_backend_net.Controllers
 {
@@ -37,8 +40,8 @@ namespace bugtracker_backend_net.Controllers
                 Name = project.Name,
                 Description = project.Description,
                 Users = project.Users.Select(u => u.Id).ToList(),
-                CreatedAt = project.CreatedAt,
-                UpdatedAt = project.UpdatedAt
+                CreatedAt = project.CreatedAt.ToString("dd MMM, yyyy hh:mm tt"),
+                UpdatedAt = project.UpdatedAt.ToString("dd MMM, yyyy hh:mm tt")
             }).ToList();
 
             return Ok(projectResponses);
@@ -49,8 +52,8 @@ namespace bugtracker_backend_net.Controllers
         public async Task<ActionResult<ProjectResponseDto>> GetProject(Guid id)
         {
             var project = await _context.Projects
-                .Include(p => p.Users) 
-                .AsNoTracking()     
+                .Include(p => p.Users)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (project == null)
@@ -73,32 +76,59 @@ namespace bugtracker_backend_net.Controllers
         // PUT: api/Projects/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProject(Guid id, Project project)
+        public async Task<IActionResult> PutTicket(Guid id, [FromBody] ProjectDto projectDto)
         {
-            if (id != project.Id)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
             {
-                return BadRequest();
+                return Unauthorized(new { message = "User is not authenticated." });
             }
 
-            _context.Entry(project).State = EntityState.Modified;
+            var project = await _context.Projects
+                .Include(p => p.Users)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
 
-            try
+            if (project == null)
             {
-                await _context.SaveChangesAsync();
+                return NotFound($"Project with {id} not found.");
             }
-            catch (DbUpdateConcurrencyException)
+
+            if (projectDto.Users.Length > 0)
             {
-                if (!ProjectExists(id))
+                foreach (var newUserId in projectDto.Users)
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
+                    var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == newUserId);
+
+                    if (user != null)
+                    {
+                        project.Users.Add(user);
+                    }
+                    else
+                    {
+                        return NotFound($"User with ID {userId} not found.");
+                    }
+                    project.Users.Add(user);
                 }
             }
 
-            return NoContent();
+            project.Description = projectDto.Description;
+            project.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            var projectResponse = new ProjectResponseDto
+            {
+                Id = project.Id,
+                Name = project.Name,
+                Description = project.Description,
+                Users = project.Users.Select(u => u.Id).ToList(),
+                CreatedAt = project.CreatedAt.ToString("dd MMM, yyyy hh:mm tt"),
+                UpdatedAt = project.UpdatedAt.ToString("dd MMM, yyyy hh:mm tt")
+            };
+
+            return Ok(projectResponse);
         }
 
         // POST: api/Projects
@@ -106,6 +136,14 @@ namespace bugtracker_backend_net.Controllers
         [HttpPost]
         public async Task<ActionResult<ProjectResponseDto>> PostProject([FromBody] ProjectDto projectDto)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return Unauthorized(new { message = "User is not authenticated." });
+            }
+
+
             var existingProject = await _context.Projects
               .FirstOrDefaultAsync(p => p.Name == projectDto.Name);
 
@@ -124,7 +162,7 @@ namespace bugtracker_backend_net.Controllers
                 return BadRequest("Some users were not found.");
             }
 
-            var project = new Project
+            var project = new Data.Models.Project
             {
                 Name = projectDto.Name,
                 Description = projectDto.Description,
@@ -140,8 +178,8 @@ namespace bugtracker_backend_net.Controllers
                 Name = project.Name,
                 Description = project.Description,
                 Users = project.Users.Select(u => u.Id).ToList(),
-                CreatedAt = project.CreatedAt,
-                UpdatedAt = project.UpdatedAt
+                CreatedAt = project.CreatedAt.ToString("MMM dd, yyyy hh:mm tt"),
+                UpdatedAt = project.UpdatedAt.ToString("MMM dd, yyyy hh:mm tt")
             };
 
 
@@ -153,6 +191,14 @@ namespace bugtracker_backend_net.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(Guid id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return Unauthorized(new { message = "User is not authenticated." });
+            }
+
+
             var project = await _context.Projects.FindAsync(id);
             if (project == null)
             {
@@ -163,6 +209,54 @@ namespace bugtracker_backend_net.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpPost("{projectId}/users")]
+        public async Task<IActionResult> AddUserToProject(Guid projectId, [FromBody] UserIdDto userIdDto)
+        {
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return Unauthorized(new { message = "User is not authenticated." });
+            }
+
+
+            var project = await _context.Projects.Include(p => p.Users)
+                .FirstOrDefaultAsync(p => p.Id == projectId);
+
+
+            if (project == null) return NotFound();
+
+
+            var user = await _context.Users.FindAsync(userIdDto.Id);
+            if (user == null) return NotFound();
+
+
+            if (project.Users.Any(u => u.Id == userIdDto.Id))
+                return BadRequest("User is already added to the project.");
+
+            project.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(project);
+        }
+
+        [HttpDelete("{projectId}/users/{userId}")]
+        public async Task<IActionResult> RemoveUserFromProject(Guid projectId, Guid userId)
+        {
+            var project = await _context.Projects.Include(p => p.Users)
+                    .FirstOrDefaultAsync(p => p.Id == projectId);
+            if (project == null) return NotFound();
+
+            var user = project.Users.FirstOrDefault(u => u.Id == userId);
+            if (user == null) return NotFound("User not found in the project.");
+
+            project.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(project);
         }
 
         private bool ProjectExists(Guid id)

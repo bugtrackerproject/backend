@@ -11,6 +11,7 @@ using System.Security.Claims;
 
 namespace bugtracker_backend_net.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class TicketsController : ControllerBase
@@ -26,6 +27,13 @@ namespace bugtracker_backend_net.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TicketResponseDto>>> GetTickets()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return Unauthorized(new { message = "User is not authenticated." });
+            }
+
             var tickets = await _context.Tickets
                 .Include(t => t.Project)
                 .Include(t => t.Assignee)
@@ -44,8 +52,8 @@ namespace bugtracker_backend_net.Controllers
                 Project = ticket.Project?.Id ?? Guid.Empty,
                 Assignee = ticket.Assignee?.Id ?? Guid.Empty,
                 Submitter = ticket.Submitter?.Id ?? Guid.Empty,
-                CreatedAt = ticket.CreatedAt,
-                UpdatedAt = ticket.UpdatedAt
+                CreatedAt = ticket.CreatedAt.ToString("dd MMM, yyyy hh:mm tt"),
+                UpdatedAt = ticket.UpdatedAt.ToString("dd MMM, yyyy hh:mm tt")
             }).ToList();
 
             return Ok(ticketResponses);
@@ -55,6 +63,13 @@ namespace bugtracker_backend_net.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<TicketResponseDto>> GetTicket(Guid id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return Unauthorized(new { message = "User is not authenticated." });
+            }
+
             var ticket = await _context.Tickets
                 .Include(t => t.Project)
                 .Include(t => t.Assignee)
@@ -78,8 +93,8 @@ namespace bugtracker_backend_net.Controllers
                 Project = ticket.Project?.Id ?? Guid.Empty,
                 Assignee = ticket.Assignee?.Id ?? Guid.Empty,
                 Submitter = ticket.Submitter?.Id ?? Guid.Empty,
-                CreatedAt = ticket.CreatedAt,
-                UpdatedAt = ticket.UpdatedAt
+                CreatedAt = ticket.CreatedAt.ToString("dd MM, yyyy hh:mm tt"),
+                UpdatedAt = ticket.UpdatedAt.ToString("dd MM, yyyy hh:mm tt")
             };
 
 
@@ -87,7 +102,6 @@ namespace bugtracker_backend_net.Controllers
         }
 
         // POST api/<TicketsController>
-        [Authorize]
         [HttpPost]
         public async Task<ActionResult<TicketResponseDto>> PostTicket([FromBody] TicketDto ticketDto)
         {
@@ -149,8 +163,8 @@ namespace bugtracker_backend_net.Controllers
                 Project = ticket.ProjectId,
                 Assignee = ticket.AssigneeId,
                 Submitter = ticket.SubmitterId,
-                CreatedAt = ticket.CreatedAt,
-                UpdatedAt = ticket.UpdatedAt
+                CreatedAt = ticket.CreatedAt.ToString("dd MMM, yyyy hh:mm tt"),
+                UpdatedAt = ticket.UpdatedAt.ToString("dd MMM, yyyy hh:mm tt")
             };
 
 
@@ -161,8 +175,56 @@ namespace bugtracker_backend_net.Controllers
 
         // PUT api/<TicketsController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public async Task<IActionResult> PutTicket(Guid id, [FromBody] TicketDto ticketDto)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return Unauthorized(new { message = "User is not authenticated." });
+            }
+
+            var ticket = await _context.Tickets
+                .FindAsync(id);
+
+            if (ticket == null)
+            {
+                return NotFound($"Ticket with {id} not found.");
+            }
+            var ticketProperties = typeof(Ticket).GetProperties();
+            var ticketDtoProperties = typeof(TicketDto).GetProperties();
+
+            foreach (var dtoProperty in ticketDtoProperties)
+            {
+                var ticketProperty = ticketProperties.FirstOrDefault(p => p.Name == dtoProperty.Name);
+
+                if (ticketProperty != null && ticketProperty.CanWrite)
+                {
+                    var value = dtoProperty.GetValue(ticketDto);
+                    ticketProperty.SetValue(ticket, value);
+                }
+            }
+            ticket.UpdatedAt = DateTime.UtcNow;
+
+            
+            await _context.SaveChangesAsync();
+
+            var ticketResponse = new TicketResponseDto
+            {
+                Id = ticket.Id,
+                Name = ticket.Name,
+                Description = ticket.Description,
+                Type = ticket.Type,
+                Status = ticket.Status,
+                Priority = ticket.Priority,
+                Project = ticket.ProjectId,
+                Assignee = ticket.AssigneeId,
+                Submitter = ticket.SubmitterId,
+                CreatedAt = ticket.CreatedAt.ToString("dd MMM, yyyy hh:mm tt"),
+                UpdatedAt = ticket.UpdatedAt.ToString("dd MMM, yyyy hh:mm tt")
+            };
+
+            return Ok(ticketResponse);
         }
 
         // DELETE api/<TicketsController>/5

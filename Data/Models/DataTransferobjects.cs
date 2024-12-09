@@ -35,8 +35,8 @@ namespace bugtracker_backend_net.Data.DataTransferObjects
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public string CreatedAt { get; set; }
+        public string UpdatedAt { get; set; }
         public List<Guid> Users { get; set; } = new();
     }
 
@@ -62,8 +62,8 @@ namespace bugtracker_backend_net.Data.DataTransferObjects
         public Guid Project { get; set; }
         public Guid? Assignee { get; set; }
         public Guid Submitter { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public string CreatedAt { get; set; }
+        public string UpdatedAt { get; set; }
     }
 
 }
