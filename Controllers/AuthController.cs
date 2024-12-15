@@ -10,6 +10,7 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.Extensions.Options;
 
+
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace bugtracker_backend_net.Controllers
@@ -81,6 +82,45 @@ namespace bugtracker_backend_net.Controllers
             });
 
         }
+
+        [HttpPost("register")]
+        public async Task<ActionResult<User>> PostUser([FromBody] UserDto userDto)
+        {
+            if (userDto == null || string.IsNullOrEmpty(userDto.Email) || string.IsNullOrEmpty(userDto.Password))
+            {
+                return BadRequest("Email and Password are required.");
+            }
+
+            if (userDto.Password.Length < 3)
+            {
+                return BadRequest("Password must be at least 3 characters");
+            }
+
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == userDto.Email);
+
+            if (existingUser != null)
+            {
+                return Conflict("User with this email already exists.");
+            }
+
+            var passwordHash = _passwordHasher.HashPassword(null, userDto.Password);
+
+
+            var user = new User
+            {
+                Email = userDto.Email,
+                Name = userDto.Name,
+                PasswordHash = passwordHash,
+                Role = UserRole.User
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return Created(uri: $"/api/users/{user.Id}", value: new { email = user.Email, name = user.Name, role = user.Role });
+        }
+
 
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken()
@@ -157,7 +197,7 @@ namespace bugtracker_backend_net.Controllers
                 issuer: jwtSettings.Issuer,
                 audience: jwtSettings.Audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(12),
+                expires: DateTime.UtcNow.AddHours(3),
                 signingCredentials: creds
             );
 

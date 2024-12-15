@@ -119,6 +119,12 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.UseRouting();
+
+app.MapFallbackToFile("index.html");
+
 
 app.UseAuthentication();
 app.UseAuthorization();

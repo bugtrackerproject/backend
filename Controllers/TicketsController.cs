@@ -116,11 +116,11 @@ namespace bugtracker_backend_net.Controllers
 
             var project = await _context.Projects
                 .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Id == ticketDto.Project);
+                .FirstOrDefaultAsync(p => p.Id == ticketDto.ProjectId);
 
             var assignee = await _context.Users
                 .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Id == ticketDto.Assignee);
+                .FirstOrDefaultAsync(u => u.Id == ticketDto.AssigneeId);
 
             var submitter = await _context.Users
                 .AsNoTracking()
@@ -144,8 +144,8 @@ namespace bugtracker_backend_net.Controllers
                 Type = ticketDto.Type,
                 Status = TicketStatus.ToDo,
                 Priority = ticketDto.Priority,
-                ProjectId = ticketDto.Project,
-                AssigneeId = ticketDto.Assignee,
+                ProjectId = ticketDto.ProjectId,
+                AssigneeId = ticketDto.AssigneeId,
                 SubmitterId = submitterId
             };
 
@@ -182,6 +182,12 @@ namespace bugtracker_backend_net.Controllers
             if (userId == null)
             {
                 return Unauthorized(new { message = "User is not authenticated." });
+            }
+
+            var project = await _context.Projects.FindAsync(ticketDto.ProjectId);
+            if (project == null)
+            {
+                return NotFound("Project not found.");
             }
 
             var ticket = await _context.Tickets
@@ -229,8 +235,27 @@ namespace bugtracker_backend_net.Controllers
 
         // DELETE api/<TicketsController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(Guid id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return Unauthorized(new { message = "User is not authenticated." });
+            }
+
+            var ticket = await _context.Tickets.FindAsync(id);
+
+            if (ticket == null)
+            {
+                return BadRequest(new { message = "Ticket does not exist." });
+            }
+            _context.Tickets.Remove(ticket);
+
+            await _context.SaveChangesAsync();
+
+
+            return NoContent();
         }
     }
 }

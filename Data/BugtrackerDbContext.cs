@@ -25,8 +25,9 @@ namespace bugtracker_backend_net.Data
             // Configure Ticket-Project
             modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.Project)
-                .WithMany()
-                .HasForeignKey(t => t.ProjectId);
+                .WithMany(p => p.Tickets)
+                .HasForeignKey(t => t.ProjectId)
+                .HasPrincipalKey(p => p.Id);
 
             // Configure Ticket-User (Assignee) 
             modelBuilder.Entity<Ticket>()

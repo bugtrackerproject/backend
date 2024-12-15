@@ -67,7 +67,7 @@ namespace bugtracker_backend_net.Controllers
                 return NotFound($"User with ID {id} not found.");
             }
 
-            if (user.Email != userDto.Email)
+            if (user.Email != userDto.Email) //update email 
             {
                 var existingUser = await _context.Users
                     .FirstOrDefaultAsync(u => u.Email == userDto.Email);
@@ -80,9 +80,10 @@ namespace bugtracker_backend_net.Controllers
 
             user.Email = userDto.Email;
             user.Name = userDto.Name;
+            user.Role = userDto.Role;
             //user.Role = userDto.Role.ToString();
 
-            if (!string.IsNullOrEmpty(userDto.Password))
+            if (!string.IsNullOrEmpty(userDto.Password)) //update password
             {
                 user.PasswordHash = _passwordHasher.HashPassword(null, userDto.Password);
             }

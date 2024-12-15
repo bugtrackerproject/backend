@@ -13,7 +13,7 @@ namespace bugtracker_backend_net.Data.DataTransferObjects
     {
         public string Email { get; set; }
         public string Name { get; set; }
-        public string Password { get; set; }
+        public string? Password { get; set; }
 
         public UserRole Role { get; set; }
     }
@@ -47,8 +47,8 @@ namespace bugtracker_backend_net.Data.DataTransferObjects
         public TicketType Type { get; set; }   
         public TicketStatus Status { get; set; }
         public TicketPriority Priority { get; set; }
-        public Guid Project { get; set; }
-        public Guid? Assignee { get; set; }
+        public Guid ProjectId { get; set; }
+        public Guid? AssigneeId { get; set; }
     }
 
     public class TicketResponseDto

@@ -11,9 +11,11 @@ using bugtracker_backend_net.Data.DataTransferObjects;
 using System.Security.Claims;
 using Microsoft.CodeAnalysis;
 using System.Net.Sockets;
+using Microsoft.AspNetCore.Authorization;
 
 namespace bugtracker_backend_net.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ProjectsController : ControllerBase

@@ -4,3 +4,9 @@ bin/
 obj/
 
 .env
+
+fly.toml
+
+wwwroot/
+
+Dockerfile

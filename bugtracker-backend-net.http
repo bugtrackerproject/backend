@@ -1,6 +1,0 @@
-@bugtracker_backend_net_HostAddress = http://localhost:5188
-
-GET {{bugtracker_backend_net_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
