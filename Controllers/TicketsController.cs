@@ -175,19 +175,13 @@ namespace bugtracker_backend_net.Controllers
 
         // PUT api/<TicketsController>/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTicket(Guid id, [FromBody] TicketDto ticketDto)
+        public async Task<IActionResult> PutTicket(Guid id, [FromBody] TicketUpdateDto ticketDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (userId == null)
             {
                 return Unauthorized(new { message = "User is not authenticated." });
-            }
-
-            var project = await _context.Projects.FindAsync(ticketDto.ProjectId);
-            if (project == null)
-            {
-                return NotFound("Project not found.");
             }
 
             var ticket = await _context.Tickets
@@ -197,19 +191,17 @@ namespace bugtracker_backend_net.Controllers
             {
                 return NotFound($"Ticket with {id} not found.");
             }
-            var ticketProperties = typeof(Ticket).GetProperties();
-            var ticketDtoProperties = typeof(TicketDto).GetProperties();
+            
 
-            foreach (var dtoProperty in ticketDtoProperties)
-            {
-                var ticketProperty = ticketProperties.FirstOrDefault(p => p.Name == dtoProperty.Name);
+            if (ticketDto.Name != null) ticket.Name = ticketDto.Name;
+            if (ticketDto.Description != null) ticket.Description = ticketDto.Description;
+            if (ticketDto.Type != null) ticket.Type = ticketDto.Type.Value; // Unwrap nullable enum
+            if (ticketDto.Status != null) ticket.Status = ticketDto.Status.Value; // Unwrap nullable enum
+            if (ticketDto.Priority != null) ticket.Priority = ticketDto.Priority.Value; // Unwrap nullable enum
+            if (ticketDto.ProjectId != null) ticket.ProjectId = ticketDto.ProjectId.Value;
+            if (ticketDto.AssigneeId != null) ticket.AssigneeId = ticketDto.AssigneeId.Value;
 
-                if (ticketProperty != null && ticketProperty.CanWrite)
-                {
-                    var value = dtoProperty.GetValue(ticketDto);
-                    ticketProperty.SetValue(ticket, value);
-                }
-            }
+
             ticket.UpdatedAt = DateTime.UtcNow;
 
             

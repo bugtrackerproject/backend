@@ -51,6 +51,17 @@ namespace bugtracker_backend_net.Data.DataTransferObjects
         public Guid? AssigneeId { get; set; }
     }
 
+    public class TicketUpdateDto
+    {
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public TicketType? Type { get; set; } = null;
+        public TicketStatus? Status { get; set; } = null;
+        public TicketPriority? Priority { get; set; } = null;
+        public Guid? ProjectId { get; set; } = null;
+        public Guid? AssigneeId { get; set; } = null;
+    }
+
     public class TicketResponseDto
     {
         public Guid Id { get; set; }
