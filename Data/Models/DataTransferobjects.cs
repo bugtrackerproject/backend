@@ -30,7 +30,15 @@ namespace bugtracker_backend_net.Data.DataTransferObjects
         public Guid[] Users { get; set; } = Array.Empty<Guid>();
     }
 
-    public class ProjectResponseDto
+    public class ProjectUpdateDto
+    {
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public Guid[] Users { get; set; } = Array.Empty<Guid>();
+
+    }
+
+    public class ProjectResponseWithUsersDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
@@ -38,6 +46,14 @@ namespace bugtracker_backend_net.Data.DataTransferObjects
         public string CreatedAt { get; set; }
         public string UpdatedAt { get; set; }
         public List<Guid> Users { get; set; } = new();
+    }
+    public class ProjectResponseDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string CreatedAt { get; set; }
+        public string UpdatedAt { get; set; }
     }
 
     public class TicketDto

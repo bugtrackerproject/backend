@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using bugtracker_backend_net.Data;
@@ -36,7 +32,7 @@ namespace bugtracker_backend_net.Controllers
                 .AsNoTracking()
                 .ToListAsync();
 
-            var projectResponses = projects.Select(project => new ProjectResponseDto
+            var projectResponses = projects.Select(project => new ProjectResponseWithUsersDto
             {
                 Id = project.Id,
                 Name = project.Name,
@@ -63,12 +59,14 @@ namespace bugtracker_backend_net.Controllers
                 return NotFound(new { message = "Project not found." });
             }
 
-            var projectResponse = new ProjectResponseDto
+            var projectResponse = new ProjectResponseWithUsersDto
             {
                 Id = project.Id,
                 Name = project.Name,
                 Description = project.Description,
-                Users = project.Users.Select(u => u.Id).ToList()
+                Users = project.Users.Select(u => u.Id).ToList(),
+                CreatedAt = project.CreatedAt.ToString("dd MMM, yyyy hh:mm tt"),
+                UpdatedAt = project.UpdatedAt.ToString("dd MMM, yyyy hh:mm tt")
             };
 
 
@@ -78,7 +76,7 @@ namespace bugtracker_backend_net.Controllers
         // PUT: api/Projects/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTicket(Guid id, [FromBody] ProjectDto projectDto)
+        public async Task<IActionResult> PutProject(Guid id, [FromBody] ProjectUpdateDto projectDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -89,7 +87,6 @@ namespace bugtracker_backend_net.Controllers
 
             var project = await _context.Projects
                 .Include(p => p.Users)
-                .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (project == null)
@@ -105,22 +102,26 @@ namespace bugtracker_backend_net.Controllers
 
                     if (user != null)
                     {
-                        project.Users.Add(user);
+                        if (!project.Users.Any(u => u.Id == newUserId))
+                        {
+                            project.Users.Add(user);
+                        }
                     }
                     else
                     {
                         return NotFound($"User with ID {userId} not found.");
                     }
-                    project.Users.Add(user);
                 }
             }
 
-            project.Description = projectDto.Description;
+            if (projectDto.Name != null) project.Name = projectDto.Name;
+            if (projectDto.Description != null) project.Description = projectDto.Description;
+
             project.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            var projectResponse = new ProjectResponseDto
+            var projectResponse = new ProjectResponseWithUsersDto
             {
                 Id = project.Id,
                 Name = project.Name,
@@ -174,7 +175,7 @@ namespace bugtracker_backend_net.Controllers
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 
-            var projectResponse = new ProjectResponseDto
+            var projectResponse = new ProjectResponseWithUsersDto
             {
                 Id = project.Id,
                 Name = project.Name,
